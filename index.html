@@ -114,13 +114,31 @@ function updatePlot() {
     };
 
     Plotly.newPlot('plot', [surface, point, dfdx, dfdy], {
-        title: 'f(x, y) = x² + y²',
-        scene: {
-            xaxis: { title: 'X' },
-            yaxis: { title: 'Y' },
-            zaxis: { title: 'Z' }
+    title: {
+        text: 'f(x, y) = x² + y²',
+        font: { color: 'white' }
+    },
+    paper_bgcolor: 'black',
+    plot_bgcolor: 'black',
+    scene: {
+        bgcolor: 'black',
+        xaxis: {
+            title: 'X',
+            color: 'white',
+            gridcolor: '#333'
+        },
+        yaxis: {
+            title: 'Y',
+            color: 'white',
+            gridcolor: '#333'
+        },
+        zaxis: {
+            title: 'Z',
+            color: 'white',
+            gridcolor: '#333'
         }
-    });
+    }
+});
 }
 
 updatePlot();
