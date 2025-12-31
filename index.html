@@ -1,110 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Partial Differentiation – 3D Visualization</title>
-  <style>
-    body {
-      margin: 0;
-      background: #0f172a;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
-    h1 {
-      margin-top: 15px;
-    }
-    canvas {
-      display: block;
-    }
-    p {
-      color: #cbd5f5;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>3D Partial Differentiation Visualization</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #f4f4f4;
+        }
+        input {
+            padding: 6px;
+            margin: 5px;
+            width: 80px;
+        }
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+        #plot {
+            width: 95%;
+            height: 600px;
+            margin: auto;
+        }
+    </style>
 </head>
 <body>
 
-<h1>3D Partial Differentiation</h1>
-<p>Surface: z = x² + y²</p>
-  <p style="position:absolute;top:60px;left:10px;color:red;">∂z/∂x</p>
-<p style="position:absolute;top:80px;left:10px;color:green;">∂z/∂y</p>
+<h2>3D Visualization of Partial Differentiation</h2>
 
-<script  src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.js"></script>
+<label>X value:</label>
+<input type="number" id="xVal" value="1">
+
+<label>Y value:</label>
+<input type="number" id="yVal" value="1">
+
+<button onclick="updatePlot()">Visualize</button>
+
+<div id="plot"></div>
 
 <script>
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0f172a);
+function updatePlot() {
+    let x0 = parseFloat(document.getElementById("xVal").value);
+    let y0 = parseFloat(document.getElementById("yVal").value);
 
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-  camera.position.set(6, 6, 6);
+    let x = [];
+    let y = [];
+    let z = [];
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+    for (let i = -5; i <= 5; i += 0.2) {
+        x.push(i);
+        y.push(i);
+    }
 
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; // smooth rotation
-  controls.dampingFactor = 0.05;
+    for (let i = 0; i < x.length; i++) {
+        let row = [];
+        for (let j = 0; j < y.length; j++) {
+            row.push(x[i]*x[i] + y[j]*y[j]);
+        }
+        z.push(row);
+    }
 
-  // Light
-  const light = new THREE.DirectionalLight(0xffffff, 1);
-  light.position.set(5, 10, 7);
-  scene.add(light);
+    let surface = {
+        x: x,
+        y: y,
+        z: z,
+        type: 'surface',
+        opacity: 0.85
+    };
 
-  // Surface Geometry z = x^2 + y^2
-  const geometry = new THREE.PlaneGeometry(6, 6, 50, 50);
-  const vertices = geometry.attributes.position;
-  for (let i = 0; i < vertices.count; i++) {
-    const x = vertices.getX(i);
-    const y = vertices.getY(i);
-    const z = (x*x + y*y)/4;
-    vertices.setZ(i, z);
-  }
-  geometry.computeVertexNormals();
+    // Point on surface
+    let point = {
+        x: [x0],
+        y: [y0],
+        z: [x0*x0 + y0*y0],
+        mode: 'markers',
+        type: 'scatter3d',
+        marker: { size: 6, color: 'red' },
+        name: 'Input Point'
+    };
 
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x38bdf8,
-    side: THREE.DoubleSide,
-    wireframe: false
-  });
+    // Partial derivative vectors
+    let dfdx = {
+        x: [x0, x0 + 1],
+        y: [y0, y0],
+        z: [x0*x0 + y0*y0, x0*x0 + y0*y0 + 2*x0],
+        mode: 'lines',
+        type: 'scatter3d',
+        line: { color: 'blue', width: 6 },
+        name: '∂f/∂x'
+    };
 
-  const surface = new THREE.Mesh(geometry, material);
-  surface.rotation.x = -Math.PI/2;
-  scene.add(surface);
+    let dfdy = {
+        x: [x0, x0],
+        y: [y0, y0 + 1],
+        z: [x0*x0 + y0*y0, x0*x0 + y0*y0 + 2*y0],
+        mode: 'lines',
+        type: 'scatter3d',
+        line: { color: 'green', width: 6 },
+        name: '∂f/∂y'
+    };
 
-  // Partial derivatives arrows
-  const arrowHelperX = new THREE.ArrowHelper(
-    new THREE.Vector3(1, 0, 0), // direction
-    new THREE.Vector3(0,0,0),   // origin
-    2,                          // length
-    0xff0000                    // color red
-  );
-  scene.add(arrowHelperX);
+    Plotly.newPlot('plot', [surface, point, dfdx, dfdy], {
+        title: 'f(x, y) = x² + y²',
+        scene: {
+            xaxis: { title: 'X' },
+            yaxis: { title: 'Y' },
+            zaxis: { title: 'Z' }
+        }
+    });
+}
 
-  const arrowHelperY = new THREE.ArrowHelper(
-    new THREE.Vector3(0, 1, 0),
-    new THREE.Vector3(0,0,0),
-    2,
-    0x00ff00 // green
-  );
-  scene.add(arrowHelperY);
-
-  function animate() {
-    requestAnimationFrame(animate);
-    controls.update(); // update controls
-    renderer.render(scene, camera);
-  }
-  animate();
-
-  // Handle window resize
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
+updatePlot();
 </script>
-  
 
 </body>
 </html>
